@@ -1,0 +1,301 @@
+2026-01-21 19:58:35,166 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 19:58:35,166 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 19:58:36,125 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 19:58:36,126 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 19:58:36,126 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 19:58:48,502 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:01:10,853 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:01:10,853 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:01:11,849 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:01:12,350 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:01:12,352 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:01:12,352 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:01:12,352 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:01:15,900 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:02:14,288 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:02:14,288 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:02:15,254 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:02:15,255 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:02:15,255 - src.exchanges.okx_client - DEBUG - Request to: https://www.okx.com/api/v5/account/borrow-interest-limits
+2026-01-21 20:02:15,255 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'bPCo0wUN971WVSNNzo+02XDvosTRCUKzqzm1HWLuHA0=', 'OK-ACCESS-TIMESTAMP': '1769000535', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:02:15,675 - src.exchanges.okx_client - DEBUG - Response status: 404
+2026-01-21 20:02:15,675 - src.exchanges.okx_client - DEBUG - Response text: {"code":404,"data":{},"detailMsg":"","error_code":"404","error_message":"Not Found","msg":"Not Found"}
+2026-01-21 20:02:15,675 - src.exchanges.okx_client - ERROR - OKX API Error: Not Found (code: 404)
+2026-01-21 20:02:15,676 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:02:15,677 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:02:15,677 - src.strategies.opportunity_finder - DEBUG - OKX DF: (0, 0)
+2026-01-21 20:02:15,677 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:02:15,678 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:02:15,678 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:02:31,579 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:03:27,546 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:03:27,546 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:03:28,498 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:03:28,498 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:03:28,498 - src.exchanges.okx_client - DEBUG - Request URL: https://www.okx.com/api/v5/account/interest-limits
+2026-01-21 20:03:28,498 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': '/ewme7qmr/IAFsJ7AfMCTOs04Cuvo+ulwj9RfwltHPo=', 'OK-ACCESS-TIMESTAMP': '1769000608', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:03:28,498 - src.exchanges.okx_client - DEBUG - Params: {'type': '2', 'mgnMode': 'cross'}
+2026-01-21 20:03:28,908 - src.exchanges.okx_client - DEBUG - Response status: 401
+2026-01-21 20:03:28,908 - src.exchanges.okx_client - DEBUG - Response text: {"msg":"Invalid OK-ACCESS-TIMESTAMP","code":"50112"}
+2026-01-21 20:03:28,908 - src.exchanges.okx_client - ERROR - OKX API Error: Invalid OK-ACCESS-TIMESTAMP (code: 50112)
+2026-01-21 20:03:28,909 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:03:28,910 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:03:28,910 - src.strategies.opportunity_finder - DEBUG - OKX DF: (0, 0)
+2026-01-21 20:03:28,910 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:03:28,910 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:03:28,910 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:03:39,066 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:04:22,915 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:04:22,916 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:04:23,945 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:04:23,945 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:04:23,945 - src.exchanges.okx_client - DEBUG - Request URL: https://www.okx.com/api/v5/account/interest-limits
+2026-01-21 20:04:23,945 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'pDRF/bRh0aKnbB96FNSyQHJgfmpF60/JknbMg6d7DRo=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:04:23.945Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:04:23,945 - src.exchanges.okx_client - DEBUG - Params: {'type': '2', 'mgnMode': 'cross'}
+2026-01-21 20:04:24,513 - src.exchanges.okx_client - DEBUG - Response status: 401
+2026-01-21 20:04:24,513 - src.exchanges.okx_client - DEBUG - Response text: {"msg":"Invalid Sign","code":"50113"}
+2026-01-21 20:04:24,513 - src.exchanges.okx_client - ERROR - OKX API Error: Invalid Sign (code: 50113)
+2026-01-21 20:04:24,514 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:04:24,515 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:04:24,515 - src.strategies.opportunity_finder - DEBUG - OKX DF: (0, 0)
+2026-01-21 20:04:24,515 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:04:24,515 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:04:24,515 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:04:29,109 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:05:34,405 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:05:34,405 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:05:35,349 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:05:35,349 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:05:35,349 - src.exchanges.okx_client - DEBUG - Signature message: 2026-01-21T13:05:35.349ZGET/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:05:35,350 - src.exchanges.okx_client - DEBUG - Request URL: https://www.okx.com/api/v5/account/interest-limits
+2026-01-21 20:05:35,350 - src.exchanges.okx_client - DEBUG - Query params: {'type': '2', 'mgnMode': 'cross'}
+2026-01-21 20:05:35,350 - src.exchanges.okx_client - DEBUG - Path for signature: /api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:05:35,350 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'cR8tRq5tJ1jTNda61ThH8/zWwPKE2RCd5G3tvopNDcU=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:05:35.349Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:05:35,746 - src.exchanges.okx_client - DEBUG - Response status: 401
+2026-01-21 20:05:35,747 - src.exchanges.okx_client - DEBUG - Response text: {"msg":"Invalid Sign","code":"50113"}
+2026-01-21 20:05:35,747 - src.exchanges.okx_client - ERROR - OKX API Error: Invalid Sign (code: 50113)
+2026-01-21 20:05:35,748 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:05:35,749 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:05:35,749 - src.strategies.opportunity_finder - DEBUG - OKX DF: (0, 0)
+2026-01-21 20:05:35,749 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:05:35,749 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:05:35,749 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:05:46,683 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:06:46,483 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:06:46,483 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:06:47,414 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:06:47,414 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:06:47,414 - src.exchanges.okx_client - DEBUG - Message to sign: 2026-01-21T13:06:47.414ZGET/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:06:47,414 - src.exchanges.okx_client - DEBUG - Full URL: https://www.okx.com/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:06:47,414 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'dSFbsVuzjzrcPDEqICkOtrrhmAdLAb4GnVZUqzlZ/qg=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:06:47.414Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:06:47,813 - src.exchanges.okx_client - DEBUG - Response status: 200
+2026-01-21 20:06:47,813 - src.exchanges.okx_client - DEBUG - Response text: {"code":"0","data":[{"debt":"0","interest":"0","loanAlloc":"","nextDiscountTime":"1769004000000","nextInterestTime":"1769004000000","records":[{"availLoan":"","avgRate":"","ccy":"BTC","interest":"0","interestFreeLiab":"0","loanQuota":"175","posLoan":"","potentialBorrowingAmt":"0","rate":"0.0000276","surplusLmt":"175","surplusLmtDetails":{},"usedLmt":"0","usedLoan":""},{"availLoan":"","avgRate":"","ccy":"ETH","interest":"0","interestFreeLiab":"0","loanQuota":"7000","posLoan":"","potentialBorrowin
+2026-01-21 20:06:47,814 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:06:47,815 - src.strategies.opportunity_finder - DEBUG - Extracted 177 records
+2026-01-21 20:06:47,815 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:06:47,815 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:06:47,815 - src.strategies.opportunity_finder - DEBUG - OKX DF: (177, 4)
+2026-01-21 20:06:47,817 - src.strategies.opportunity_finder - INFO - Merged: 169 common tokens
+2026-01-21 20:06:47,818 - src.strategies.opportunity_finder - INFO - Found 12 opportunities
+2026-01-21 20:06:47,822 - __main__ - INFO - Data tersimpan: data/opportunities.csv (12 records)
+2026-01-21 20:06:47,823 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:08:12,249 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:09:25,782 - src.exchanges.okx_client - DEBUG - Message to sign: 2026-01-21T13:09:25.782ZGET/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:09:25,783 - src.exchanges.okx_client - DEBUG - Full URL: https://www.okx.com/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:09:25,783 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': '27Q+JpLW3+F892zY1xJzvYjHzdveEUSmai6fnD8dZ4Y=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:09:25.782Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:09:26,286 - src.exchanges.okx_client - DEBUG - Response status: 200
+2026-01-21 20:09:26,286 - src.exchanges.okx_client - DEBUG - Response text: {"code":"0","data":[{"debt":"0","interest":"0","loanAlloc":"","nextDiscountTime":"1769004000000","nextInterestTime":"1769004000000","records":[{"availLoan":"","avgRate":"","ccy":"BTC","interest":"0","interestFreeLiab":"0","loanQuota":"175","posLoan":"","potentialBorrowingAmt":"0","rate":"0.0000276","surplusLmt":"175","surplusLmtDetails":{},"usedLmt":"0","usedLoan":""},{"availLoan":"","avgRate":"","ccy":"ETH","interest":"0","interestFreeLiab":"0","loanQuota":"7000","posLoan":"","potentialBorrowin
+2026-01-21 20:09:26,286 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:11:22,363 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:11:22,363 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:11:23,282 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:11:23,282 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:11:23,282 - src.exchanges.okx_client - DEBUG - Message to sign: 2026-01-21T13:11:23.282ZGET/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:11:23,282 - src.exchanges.okx_client - DEBUG - Full URL: https://www.okx.com/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:11:23,282 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'kr64fJ6fXNLTsLb3KlIZmfXoo3pZrXpsD0KKHOH9gXk=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:11:23.282Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:11:23,714 - src.exchanges.okx_client - DEBUG - Response status: 200
+2026-01-21 20:11:23,714 - src.exchanges.okx_client - DEBUG - Response text: {"code":"0","data":[{"debt":"0","interest":"0","loanAlloc":"","nextDiscountTime":"1769004000000","nextInterestTime":"1769004000000","records":[{"availLoan":"","avgRate":"","ccy":"BTC","interest":"0","interestFreeLiab":"0","loanQuota":"175","posLoan":"","potentialBorrowingAmt":"0","rate":"0.0000276","surplusLmt":"175","surplusLmtDetails":{},"usedLmt":"0","usedLoan":""},{"availLoan":"","avgRate":"","ccy":"ETH","interest":"0","interestFreeLiab":"0","loanQuota":"7000","posLoan":"","potentialBorrowin
+2026-01-21 20:11:23,714 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:11:23,715 - src.strategies.opportunity_finder - DEBUG - Extracted 177 records
+2026-01-21 20:11:23,715 - __main__ - ERROR - Error: name 'interest_rate' is not defined
+Traceback (most recent call last):
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 21, in main
+    df = finder.find_opportunities()
+  File "C:\Code\earn-view\opportunity-detector\src\strategies\opportunity_finder.py", line 93, in find_opportunities
+    okx_df = self.get_okx_data()
+  File "C:\Code\earn-view\opportunity-detector\src\strategies\opportunity_finder.py", line 80, in get_okx_data
+    'okx_loan_rate': interest_rate,
+                     ^^^^^^^^^^^^^
+NameError: name 'interest_rate' is not defined. Did you mean: 'interest_rate_apy'?
+2026-01-21 20:13:03,244 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:13:03,245 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:13:04,216 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:13:04,216 - src.strategies.opportunity_finder - DEBUG - Calling OKX API...
+2026-01-21 20:13:04,216 - src.exchanges.okx_client - DEBUG - Message to sign: 2026-01-21T13:13:04.216ZGET/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:13:04,216 - src.exchanges.okx_client - DEBUG - Full URL: https://www.okx.com/api/v5/account/interest-limits?mgnMode=cross&type=2
+2026-01-21 20:13:04,216 - src.exchanges.okx_client - DEBUG - Headers: {'OK-ACCESS-KEY': 'e6308e7c-a715-4de4-8558-7d41739e0cd8', 'OK-ACCESS-SIGN': 'sR1ExUMUAuA5x36g8uCqP9DFK5nSkQ/V6etevYAom4s=', 'OK-ACCESS-TIMESTAMP': '2026-01-21T13:13:04.216Z', 'OK-ACCESS-PASSPHRASE': 'Yoga12345&*', 'Content-Type': 'application/json'}
+2026-01-21 20:13:04,662 - src.exchanges.okx_client - DEBUG - Response status: 200
+2026-01-21 20:13:04,663 - src.exchanges.okx_client - DEBUG - Response text: {"code":"0","data":[{"debt":"0","interest":"0","loanAlloc":"","nextDiscountTime":"1769004000000","nextInterestTime":"1769004000000","records":[{"availLoan":"","avgRate":"","ccy":"BTC","interest":"0","interestFreeLiab":"0","loanQuota":"175","posLoan":"","potentialBorrowingAmt":"0","rate":"0.0000276","surplusLmt":"175","surplusLmtDetails":{},"usedLmt":"0","usedLoan":""},{"availLoan":"","avgRate":"","ccy":"ETH","interest":"0","interestFreeLiab":"0","loanQuota":"7000","posLoan":"","potentialBorrowin
+2026-01-21 20:13:04,663 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:13:04,664 - src.strategies.opportunity_finder - DEBUG - Extracted 177 records
+2026-01-21 20:13:04,664 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:13:04,664 - src.strategies.opportunity_finder - DEBUG - Gate DF: (753, 2)
+2026-01-21 20:13:04,664 - src.strategies.opportunity_finder - DEBUG - OKX DF: (177, 4)
+2026-01-21 20:13:04,666 - src.strategies.opportunity_finder - INFO - Merged: 169 common tokens
+2026-01-21 20:13:04,668 - src.strategies.opportunity_finder - INFO - Found 8 opportunities
+2026-01-21 20:13:04,671 - __main__ - INFO - Data tersimpan: data/opportunities.csv (8 records)
+2026-01-21 20:13:04,672 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:15:40,311 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:15:42,612 - __main__ - INFO - Opportunity Detector with Loan Availability dimulai
+2026-01-21 20:15:42,612 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:15:43,606 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:15:44,078 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:15:44,079 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:15:44,081 - src.strategies.opportunity_finder - INFO - Merged: 169 common tokens
+2026-01-21 20:15:44,082 - src.strategies.opportunity_finder - INFO - Found 8 opportunities
+2026-01-21 20:15:44,086 - __main__ - INFO - Data tersimpan: data/opportunities.csv (8 records)
+2026-01-21 20:15:44,086 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:18:16,068 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:19:11,251 - __main__ - INFO - Mode: Semua peluang
+2026-01-21 20:19:11,252 - __main__ - INFO - Opportunity Detector with Loan Availability dimulai
+2026-01-21 20:19:11,252 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:19:12,179 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:19:12,650 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:19:12,652 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:19:12,654 - src.strategies.opportunity_finder - INFO - Merged: 169 common tokens
+2026-01-21 20:19:12,655 - src.strategies.opportunity_finder - INFO - Found 8 opportunities
+2026-01-21 20:19:12,659 - __main__ - INFO - Data tersimpan: data/opportunities.csv (8 records)
+2026-01-21 20:19:12,659 - __main__ - INFO - Menunggu 300 detik...
+2026-01-21 20:21:14,303 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:21:15,040 - __main__ - INFO - Opportunity Detector with Menu Interaktif dimulai
+2026-01-21 20:21:16,695 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:21:26,450 - __main__ - INFO - Opportunity Detector with Menu Interaktif dimulai
+2026-01-21 20:21:35,389 - __main__ - ERROR - Error: 'OpportunityFinder' object has no attribute 'search_token'
+Traceback (most recent call last):
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 116, in main
+    search_token_interactive(finder)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 32, in search_token_interactive
+    df = finder.search_token(token)
+         ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OpportunityFinder' object has no attribute 'search_token'
+2026-01-21 20:21:45,213 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:23:00,781 - __main__ - INFO - Opportunity Detector with Menu Interaktif dimulai
+2026-01-21 20:23:05,719 - src.strategies.opportunity_finder - INFO - Mencari token: BTC
+2026-01-21 20:23:06,763 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:23:07,287 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:23:07,288 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:23:07,292 - __main__ - ERROR - Error: 'status'
+Traceback (most recent call last):
+  File "C:\Code\earn-view\opportunity-detector\venv\Lib\site-packages\pandas\core\indexes\base.py", line 3812, in get_loc
+    return self._engine.get_loc(casted_key)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'status'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 117, in main
+    search_token_interactive(finder)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 48, in search_token_interactive
+    print(f"Status: {row['status']}")
+                     ~~~^^^^^^^^^^
+  File "C:\Code\earn-view\opportunity-detector\venv\Lib\site-packages\pandas\core\series.py", line 1133, in __getitem__
+    return self._get_value(key)
+           ~~~~~~~~~~~~~~~^^^^^
+  File "C:\Code\earn-view\opportunity-detector\venv\Lib\site-packages\pandas\core\series.py", line 1249, in _get_value
+    loc = self.index.get_loc(label)
+  File "C:\Code\earn-view\opportunity-detector\venv\Lib\site-packages\pandas\core\indexes\base.py", line 3819, in get_loc
+    raise KeyError(key) from err
+KeyError: 'status'
+2026-01-21 20:23:10,143 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:23:58,674 - __main__ - INFO - Opportunity Detector with Menu Interaktif dimulai
+2026-01-21 20:24:01,346 - src.strategies.opportunity_finder - INFO - Mencari token: BTC
+2026-01-21 20:24:02,354 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:24:02,794 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:24:02,796 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:24:17,225 - src.strategies.opportunity_finder - INFO - Mencari token: BNB
+2026-01-21 20:24:17,424 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:24:17,836 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:24:17,837 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:30:33,926 - __main__ - INFO - Opportunity Detector with Menu & Watch dimulai
+2026-01-21 20:30:46,253 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:30:46,737 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:30:46,739 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:31:00,106 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:31:00,319 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:31:00,729 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:31:00,730 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:31:00,732 - src.strategies.opportunity_finder - INFO - Merged: 169 common tokens
+2026-01-21 20:31:00,733 - src.strategies.opportunity_finder - INFO - Found 8 opportunities
+2026-01-21 20:31:55,457 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:31:58,122 - __main__ - INFO - Opportunity Detector with Menu & Watch dimulai
+2026-01-21 20:32:11,645 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:32:12,103 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:32:12,104 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:32:23,968 - src.strategies.opportunity_finder - INFO - Mencari token: ETH
+2026-01-21 20:32:24,171 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:32:24,587 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:32:24,588 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:32:24,590 - __main__ - ERROR - Error: name 'datetime' is not defined
+Traceback (most recent call last):
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 215, in main
+    check_and_notify(finder, telegram)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Code\earn-view\opportunity-detector\src\main.py", line 179, in check_and_notify
+    notifier.notify_opportunity(row.to_dict())
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Code\earn-view\opportunity-detector\src\utils\telegram_notifier.py", line 66, in notify_opportunity
+    f"⏰ *Time:* `{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`"
+                   ^^^^^^^^
+NameError: name 'datetime' is not defined. Did you forget to import 'datetime'?
+2026-01-21 20:32:28,575 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:34:16,863 - __main__ - INFO - Opportunity Detector with Menu & Watch dimulai
+2026-01-21 20:34:23,412 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:34:23,843 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:34:23,845 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:34:26,563 - src.strategies.opportunity_finder - INFO - Mencari token: ETH
+2026-01-21 20:34:26,773 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:34:27,224 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:34:27,226 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:34:31,727 - src.utils.telegram_notifier - INFO - Telegram notification sent: \*📈 OPPORTUNITY ALERT: ETH\*
+━━━━━━━━━━━━━━━━━━━━
+...
+2026-01-21 20:38:49,886 - __main__ - INFO - Opportunity Detector with Menu & Watch dimulai
+2026-01-21 20:39:09,241 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:39:09,757 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:39:09,758 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:39:11,688 - src.strategies.opportunity_finder - INFO - Mencari token: ETH
+2026-01-21 20:39:11,889 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:39:12,314 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:39:12,316 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:47:54,096 - __main__ - INFO - Opportunity Detector with Watch List Manager dimulai
+2026-01-21 20:48:24,530 - __main__ - INFO - Bot dihentikan
+2026-01-21 20:53:15,110 - __main__ - INFO - Opportunity Detector with Watch List Manager dimulai
+2026-01-21 20:53:22,465 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:53:22,948 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:53:22,950 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:53:22,952 - src.utils.watch_manager - INFO - Watch list saved: 1 tokens
+2026-01-21 20:53:22,952 - src.utils.watch_manager - INFO - Token added: ETH (enabled: True)
+2026-01-21 20:53:25,031 - src.strategies.opportunity_finder - INFO - Mencari token: ETH
+2026-01-21 20:53:25,228 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:53:25,655 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:53:25,657 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:54:06,310 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:54:06,744 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:54:06,746 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:54:06,747 - src.utils.watch_manager - INFO - Watch list saved: 2 tokens
+2026-01-21 20:54:06,747 - src.utils.watch_manager - INFO - Token added: BERA (enabled: True)
+2026-01-21 20:54:09,591 - src.strategies.opportunity_finder - INFO - Mencari token: ETH
+2026-01-21 20:54:09,789 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:54:10,179 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:54:10,181 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data
+2026-01-21 20:54:10,183 - src.strategies.opportunity_finder - INFO - Mencari token: BERA
+2026-01-21 20:54:10,364 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:54:10,783 - src.exchanges.okx_client - INFO - OKX API success: 1 records
+2026-01-21 20:54:10,784 - src.strategies.opportunity_finder - INFO - OKX: 177 tokens with loan data

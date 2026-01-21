@@ -1,0 +1,8 @@
+2026-01-21 20:03:27,546 - __main__ - INFO - Opportunity Detector dimulai
+2026-01-21 20:03:27,546 - src.strategies.opportunity_finder - INFO - Mencari peluang...
+2026-01-21 20:03:28,498 - src.strategies.opportunity_finder - INFO - Gate: 753 tokens with APR
+2026-01-21 20:03:28,908 - src.exchanges.okx_client - ERROR - OKX API Error: Invalid OK-ACCESS-TIMESTAMP (code: 50112)
+2026-01-21 20:03:28,909 - src.strategies.opportunity_finder - WARNING - OKX API: No loan data
+2026-01-21 20:03:28,910 - src.strategies.opportunity_finder - WARNING - Data tidak lengkap
+2026-01-21 20:03:28,910 - __main__ - INFO - Tidak ada peluang sesuai kriteria
+2026-01-21 20:03:28,910 - __main__ - INFO - Menunggu 300 detik...
