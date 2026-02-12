@@ -162,9 +162,21 @@ class SniperBot:
                             if line:
                                 clean_line = line.strip()
                                 if clean_line:
-                                    logger.info(f"[BROWSER] {clean_line}")
-                                    self.borrow_history.append(f"{datetime.now().strftime('%H:%M:%S')} - {clean_line}")
-                                    # Update status for UI
+                                    # Filter noise: only log important events
+                                    # "Entering sniper refresh loop" is too spammy
+                                    is_important = any(k in clean_line for k in ["LTV:", "Borrow", "Success", "Failed", "Error", "Step"])
+                                    is_spam = "Entering sniper refresh loop" in clean_line
+                                    
+                                    if is_important and not is_spam:
+                                        try:
+                                            logger.info(f"[BROWSER] {clean_line}")
+                                            self.borrow_history.append(f"{datetime.now().strftime('%H:%M:%S')} - {clean_line}")
+                                        except UnicodeEncodeError:
+                                            # Fallback for Windows console: strip non-ascii
+                                            clean_ascii = clean_line.encode('ascii', 'ignore').decode('ascii')
+                                            logger.info(f"[BROWSER] {clean_ascii}")
+                                            
+                                    # Always update status msg for UI if relevant
                                     if "Step" in clean_line or "LTV" in clean_line:
                                          self.status_msg = f"🔫 {clean_line}"
                             time.sleep(0.1)
@@ -285,3 +297,54 @@ class SniperBot:
             except Exception as e:
                 logger.error(f"Sniper loop error: {e}")
                 time.sleep(5)
+
+if __name__ == "__main__":
+    import argparse
+    from src.exchanges.okx_client import OKXClient
+
+    # Setup logger for CLI run if needed
+    # (Already setup at module level)
+
+    parser = argparse.ArgumentParser(description="Sniper Bot CLI")
+    parser.add_argument("--token", required=True, help="Target token (e.g. ETH)")
+    parser.add_argument("--ltv", type=float, default=70.0, help="Max LTV %")
+    parser.add_argument("--amount", type=float, default=0.0, help="Max Amount USD (0=unlimited)")
+    parser.add_argument("--browser", action="store_true", help="Use Browser Automation")
+    parser.add_argument("--sniper", action="store_true", help="Sniper Mode (wait for stock)")
+    
+    args = parser.parse_args()
+    
+    logger.info(f"🚀 Starting Sniper Bot via CLI: token={args.token} ltv={args.ltv} browser={args.browser}")
+    
+    try:
+        # Initialize client
+        client = OKXClient()
+        
+        # Initialize bot
+        bot = SniperBot(client)
+        
+        # Start bot thread
+        success = bot.start(
+            currency=args.token,
+            max_ltv=args.ltv,
+            max_amount=args.amount,
+            use_browser=args.browser,
+            sniper_mode=args.sniper
+        )
+        
+        if success:
+            logger.info("Bot thread started. Keeping main process alive...")
+            # Keep main thread alive while bot runs in background thread
+            while bot.running:
+                time.sleep(1)
+        else:
+            logger.error("Failed to start bot (check connection or duplicates).")
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        logger.info("Sniper Bot interrupted by user.")
+        if 'bot' in locals():
+            bot.stop()
+    except Exception as e:
+        logger.error(f"Sniper Bot crash: {e}")
+        sys.exit(1)

@@ -159,16 +159,18 @@ async def find_element(page: Page, selectors: List[str], timeout: int = 3000) ->
 
 async def take_screenshot(page: Page, name: str):
     """Saves screenshot to screenshots folder with timestamp."""
-    if not os.path.exists("screenshots"):
-        os.makedirs("screenshots")
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"screenshots/{name}_{timestamp}.png"
-    try:
-        await page.screenshot(path=filename)
-        logger.info(f"📸 Screenshot saved: {filename}")
-    except Exception as e:
-        logger.error(f"Failed to take screenshot: {e}")
+    # Screenshot disabled by user request to save disk space
+    # if not os.path.exists("screenshots"):
+    #     os.makedirs("screenshots")
+    # 
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # filename = f"screenshots/{name}_{timestamp}.png"
+    # try:
+    #     await page.screenshot(path=filename)
+    #     logger.info(f"📸 Screenshot saved: {filename}")
+    # except Exception as e:
+    #     logger.error(f"Failed to take screenshot: {e}")
+    pass
 
 def parse_ltv_text(text: str) -> Tuple[float, str]:
     """Parses LTV value and status from text."""
@@ -492,26 +494,59 @@ async def browser_borrow_santai(page: Page, currency: str, amount: str, target_l
     
     # get_by_text matches search input too! Must skip it.
     # Strategy: find all text matches, click the one that's NOT the search input
+    # Strategy: find all items containing text, then filter strict match
     try:
-        matches = page.get_by_text(currency, exact=True)
-        count = await matches.count()
-        logger.info(f"   Found {count} elements with text '{currency}'")
+        # Generic locator for dropdown items
+        items = page.locator(".okui-select-item, [role='option'], .okui-select-dropdown-item")
+        count = await items.count()
         
+        if count == 0:
+            # Fallback to text matching if structure not found
+            items = page.get_by_text(currency)
+            count = await items.count()
+            
+        logger.info(f"   Found {count} potential candidates for '{currency}'")
+
         for i in range(count):
-            el = matches.nth(i)
-            if await el.is_visible(timeout=1000):
-                tag = await el.evaluate("el => el.tagName")
-                # Skip INPUT elements (that's the search box)
-                if tag.upper() == "INPUT":
-                    logger.info(f"   [{i}] Skipping INPUT element")
-                    continue
-                logger.info(f"   [{i}] Clicking {tag} element")
-                await el.click()
+            el = items.nth(i)
+            if not await el.is_visible(timeout=500):
+                continue
+                
+            txt = await el.text_content()
+            txt = txt.strip().upper() if txt else ""
+            
+            # Skip if it's the ETHW when we want ETH
+            # Check for exact match first
+            if txt == currency:
+                await el.click(force=True)
                 token_clicked = True
-                logger.info(f"   ✅ Clicked {currency}")
+                logger.info(f"   ✅ Clicked exact match '{txt}'")
                 break
+                
+            # Check if it contains currency but is not a different token
+            # e.g. "ETH Ethereum" -> OK for ETH
+            # "ETHW" -> NOT OK for ETH
+            words = re.split(r'\s+', txt)
+            if currency in words and not any(w == f"{currency}W" or w == f"{currency}F" for w in words):
+                 # Potential match, but prefer exact. Keep looking or click?
+                 # Let's try to be specific.
+                 pass
+
+        if not token_clicked:
+             # Fallback: strict text match on any element
+             exact_match = page.get_by_text(currency, exact=True)
+             if await exact_match.count() > 0:
+                  for i in range(await exact_match.count()):
+                        e = exact_match.nth(i)
+                        if await e.is_visible():
+                             t = await e.evaluate("el => el.tagName")
+                             if t.upper() != "INPUT":
+                                  await e.click(force=True)
+                                  token_clicked = True
+                                  logger.info(f"   ✅ Clicked text exact match")
+                                  break
     except Exception as e:
-        logger.warning(f"   get_by_text failed: {e}")
+        logger.warning(f"   Selection failed: {e}")
     
     if not token_clicked:
         logger.error(f"❌ Token {currency} not found in dropdown!")
@@ -682,6 +717,27 @@ async def browser_borrow_santai(page: Page, currency: str, amount: str, target_l
             await success.first.wait_for(state="visible", timeout=10000)
             logger.info("✅ SUCCESS: Loan Approved!")
             
+            # Read Final LTV
+            final_ltv = 0.0
+            try:
+                body_text = await page.locator("body").text_content()
+                final_ltv, _ = parse_ltv_text(body_text)
+            except:
+                pass
+
+            # Enhanced Notification
+            msg = (
+                f"✅ *MANUAL BORROW SUCCESS*\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"💎 *Token:* `{currency}`\n"
+                f"💰 *Amount:* `{amount}`\n"
+                f"📊 *LTV:* `{current_ltv}%` ➡️ *{final_ltv}%* (Target: {target_ltv}%)\n"
+                f"⏰ *Time:* `{datetime.now().strftime('%H:%M:%S')}`\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"🚀 _Executed via OKX Browser_"
+            )
+            await notifier.send_message_async(msg)
+            
             # Click OK to close
             try:
                 ok_btn = page.get_by_role("button", name="OK").or_(
@@ -848,21 +904,34 @@ async def browser_borrow_sniper(page: Page, token: str, target_ltv: float = 50.0
             # --- STEP C: Click token from dropdown results ---
             token_clicked = False
             try:
-                matches = page.get_by_text(token, exact=True)
-                count = await matches.count()
+                # 1. Try finding specific list items first (more reliable)
+                items = page.locator(".okui-select-item, [role='option']")
+                icount = await items.count()
                 
-                for i in range(count):
-                    el = matches.nth(i)
-                    try:
-                        if await el.is_visible(timeout=800):
-                            tag = await el.evaluate("el => el.tagName")
-                            if tag.upper() == "INPUT":
-                                continue  # Skip search input
-                            await el.click()
-                            token_clicked = True
-                            break
-                    except:
-                        continue
+                if icount > 0:
+                     for i in range(icount):
+                          el = items.nth(i)
+                          if await el.is_visible():
+                               txt = await el.text_content()
+                               if txt and token in txt.split(): # Token symbol exists as a word
+                                     await el.click(force=True)
+                                     token_clicked = True
+                                     break
+                
+                # 2. Fallback: Exact text match
+                if not token_clicked:
+                    matches = page.get_by_text(token, exact=True)
+                    count = await matches.count()
+                    for i in range(count):
+                        el = matches.nth(i)
+                        try:
+                            if await el.is_visible(timeout=800):
+                                tag = await el.evaluate("el => el.tagName")
+                                if tag.upper() == "INPUT": continue
+                                await el.click(force=True)
+                                token_clicked = True
+                                break
+                        except: continue
             except:
                 pass
             
@@ -1001,6 +1070,37 @@ async def browser_borrow_sniper(page: Page, token: str, target_ltv: float = 50.0
                                       page.get_by_text("Borrow successful", exact=False))
                             await success.first.wait_for(state="visible", timeout=10000)
                             logger.info("✅ SNIPER SUCCESS: Loan Approved!")
+                            
+                            # Read Final LTV for confirmation
+                            final_ltv = 0.0
+                            try:
+                                body_text = await page.locator("body").text_content()
+                                final_ltv, _ = parse_ltv_text(body_text)
+                                logger.info(f"   ✅ Final LTV: {final_ltv}%")
+                            except:
+                                pass
+
+                            # Enhanced Notification (ONLY if Target Reached)
+                            # User Request: "hanya mengirim notif jika ltv yang kuinginkan tercapai agar g spam"
+                            ltv_threshold = target_ltv - 1.0  # Allow 1% buffer
+                            
+                            if final_ltv >= ltv_threshold or final_ltv == 0.0:
+                                msg = (
+                                    f"🎯 *SNIPER HIT! TARGET ACQUIRED*\n"
+                                    f"━━━━━━━━━━━━━━━━━━\n"
+                                    f"💎 *Token:* `{token}`\n"
+                                    f"💧 *Liquidity Found:* `{liquidity:,.4f}`\n"
+                                    f"📊 *LTV:* `{current_ltv}%` ➡️ *{final_ltv}%* (Target: {target_ltv}%)\n"
+                                    f"⏱️ *Cycles:* `{cycle_count}`\n"
+                                    f"⏰ *Time:* `{datetime.now().strftime('%H:%M:%S')}`\n"
+                                    f"━━━━━━━━━━━━━━━━━━\n"
+                                    f"🚀 _Executed via OKX Browser_"
+                                )
+                                await notifier.send_message_async(msg)
+                                logger.info(f"   🔔 Notification SENT (LTV {final_ltv}% >= {ltv_threshold}%)")
+                            else:
+                                logger.warning(f"   🔕 Notification SUPPRESSED (Partial fill: LTV {final_ltv}% < {ltv_threshold}%)")
+
                             await take_screenshot(page, "sniper_borrow_success")
                             
                             # Click OK to close

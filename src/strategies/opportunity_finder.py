@@ -46,6 +46,8 @@ BINANCE_BORROWABLE_TOKENS = {
     'PIXEL', 'HMSTR', 'HIGH', 'MBOX', 'HOOK', 'RDNT'
 }
 
+pd.set_option('future.no_silent_downcasting', True)
+
 class OpportunityFinder:
     def __init__(self, gate_client, okx_client, binance_client=None):
         self.gate_client = gate_client

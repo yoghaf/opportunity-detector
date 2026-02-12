@@ -17,6 +17,13 @@ def setup_logger(name):
     fh.setFormatter(formatter)
     
     # Console handler
+    if sys.platform == 'win32':
+        try:
+            # Fix UnicodeEncodeError on Windows console (cp1252)
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.INFO)
     ch.setFormatter(formatter)

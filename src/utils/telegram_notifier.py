@@ -36,6 +36,31 @@ class TelegramNotifier:
             asyncio.run(self.send_message_async(message))
         except Exception as e:
             logger.error(f"Telegram sync error: {e}")
+            
+    async def send_photo_async(self, photo_path, caption=None):
+        if not self.enabled:
+            return
+            
+        try:
+            caption = caption or ""
+            # Escape markdown special chars in caption if needed, 
+            # but let's keep it simple or strictly plain text for now to avoid errors
+            
+            with open(photo_path, 'rb') as photo:
+                await self.bot.send_photo(
+                    chat_id=self.chat_id,
+                    photo=photo,
+                    caption=caption
+                )
+            logger.info(f"Telegram photo sent: {photo_path}")
+        except Exception as e:
+            logger.error(f"Telegram photo error: {e}")
+            
+    def send_photo(self, photo_path, caption=None):
+        try:
+            asyncio.run(self.send_photo_async(photo_path, caption))
+        except Exception as e:
+            logger.error(f"Telegram photo sync error: {e}")
     
     def notify_opportunity(self, token_data):
         """Kirim notifikasi - tidak perlu cek watch list lagi (sudah difilter)"""
