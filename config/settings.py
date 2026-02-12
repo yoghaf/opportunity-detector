@@ -14,6 +14,13 @@ class Config:
     OKX_API_SECRET = os.getenv('OKX_API_SECRET')
     OKX_PASSPHRASE = os.getenv('OKX_PASSPHRASE')
     
+    # Binance API (NEW)
+    BINANCE_API_KEY = os.getenv('BINANCE_API_KEY', '')
+    BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET', '')
+
+    # Network / Proxy (Anti-Detection)
+    PROXY_URL = os.getenv('PROXY_URL', '')  # e.g., http://user:pass@host:port
+    
     # Telegram (untuk notifikasi)
     TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
@@ -24,8 +31,8 @@ class Config:
     # Settings
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     UPDATE_INTERVAL = int(os.getenv('UPDATE_INTERVAL', '300'))  # detik
-    DISPLAY_LIMIT = int(os.getenv('DISPLAY_LIMIT', '50'))
-    MIN_NET_APR = float(os.getenv('MIN_NET_APR', '100'))  # minimal net APR
+    DISPLAY_LIMIT = int(os.getenv('DISPLAY_LIMIT', '100'))
+    MIN_NET_APR = float(os.getenv('MIN_NET_APR', '1'))  # minimal net APR
     MIN_OKX_SURPLUS = float(os.getenv('MIN_OKX_SURPLUS', '1000'))  # minimal surplus
     WATCH_LIST_PATH = 'data/watch_list.json'
     # File paths
