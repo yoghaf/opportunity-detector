@@ -1,7 +1,23 @@
-# 💸 EarnView - Opportunity Detector & Sniper Bot
+<div align="center">
+  <h1>💸 EarnView</h1>
+  <p><b>Opportunity Detector & Sniper Bot for Crypto Lending Arbitrage</b></p>
+  
+  [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-00a393.svg)](https://fastapi.tiangolo.com/)
+  [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+</div>
 
 A fully automated, fee-aware cryptocurrency arbitrage and lending tool. It detects interest rate differentials between major exchanges (OKX, Binance) and Gate.io Simple Earn, then automates the borrowing process using APIs or Playwright-based browser automation (Sniper Bot).
 
+## 📸 Web Dashboard Demo
+
+EarnView comes with a sleek, real-time web interface to monitor live opportunities and control the Sniper Bot. 
+
+<div align="center">
+  <img src="https://via.placeholder.com/800x450.png?text=EarnView+Dashboard+Screenshot" alt="EarnView Dashboard Preview" width="800"/>
+  <br/>
+  <i>(Tip: Replace this placeholder with a screenshot of your dashboard at `http://localhost:8001`)</i>
+</div>
 ## 🌟 Features
 - **Smart Opportunity Detection**: Scans OKX and Binance for low borrowing rates and compares them against high-yield Gate.io Simple Earn rates.
 - **Effective EV Calculation**: Calculates true profitability by automatically factoring in cross-exchange withdrawal and bridging fees.
