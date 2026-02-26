@@ -41,7 +41,8 @@ EarnView comes with a sleek, real-time web interface to monitor live opportuniti
 ### 2. Installation
 Clone the repository and install dependencies:
 ```bash
-git clone https://github.com/yourusername/opportunity-detector.git
+git clone https://github.com/yoghaf/opportunity-detector.git
+git clone 
 cd opportunity-detector
 python -m venv venv
 
