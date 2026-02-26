@@ -115,12 +115,15 @@ class GateClient:
                 print(f"🔎 Verifying Realized APR for {len(candidates)} high-yield tokens...")
                 real_aprs = self.get_real_apr_batch(candidates)
                 
-                # Overwrite 'est_rate' with real APR
+                # Add 'real_rate' while preserving 'est_rate'
                 for r in rates:
+                    # Default: real_rate is same as est_rate
+                    setattr(r, 'real_rate', getattr(r, 'est_rate', "0"))
+                    
                     if hasattr(r, 'currency') and r.currency in real_aprs:
                         real_val_percent = real_aprs[r.currency] # e.g. 50.5
-                        # Update Est Rate with Real History Rate
-                        r.est_rate = str(real_val_percent / 100.0)
+                        # Set actual realized rate
+                        r.real_rate = str(real_val_percent / 100.0)
                         
             return rates
         except Exception as e:

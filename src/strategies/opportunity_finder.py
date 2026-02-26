@@ -68,11 +68,19 @@ class OpportunityFinder:
         data = []
         for rate in rates:
             currency = getattr(rate, 'currency', '')
-            raw_rate = float(getattr(rate, 'est_rate', 0)) if getattr(rate, 'est_rate') else 0.0
-            apr = raw_rate * 100
+            
+            raw_real = float(getattr(rate, 'real_rate', 0)) if getattr(rate, 'real_rate', None) else 0.0
+            raw_est = float(getattr(rate, 'est_rate', 0)) if getattr(rate, 'est_rate', None) else 0.0
+            
+            # Fallback to est_rate if real_rate is 0 for some reason, though it shouldn't be
+            if raw_real <= 0:
+                raw_real = raw_est
+                
+            apr = raw_real * 100
+            est_apr = raw_est * 100
             
             if currency and apr > 0:
-                data.append({'currency': currency, 'gate_apr': apr})
+                data.append({'currency': currency, 'gate_apr': apr, 'gate_est_apr': est_apr})
         
         df = pd.DataFrame(data)
         logger.info(f"Gate: {len(df)} tokens with APR")

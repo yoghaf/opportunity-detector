@@ -276,6 +276,7 @@ function renderTable(data) {
         const rows = data.map(d => {
             const netApr = d.net_apr || 0;
             const gateApr = d.gate_apr || 0;
+            const gateEstApr = d.gate_est_apr || 0;
             const okxRate = d.okx_loan_rate || 0;
             const binanceRate = d.binance_loan_rate || 0; // Fix variable name binanceRate vs binRate
             const maxLoan = d.okx_avail_loan || 0;
@@ -307,7 +308,10 @@ function renderTable(data) {
             return `<tr>
                 <td class="cell-token" onclick="window.openChartModal('${d.currency}')" style="cursor:pointer; text-decoration:underline;">${esc(d.currency || '—')} 📊</td>
                 <td class="cell-signal ${signalClass}">${signalText}</td>
-                <td class="num ${gateApr > 50 ? 'cell-positive' : 'cell-neutral'}">${fmt(gateApr)}</td>
+                <td class="num ${gateApr > 50 ? 'cell-positive' : 'cell-neutral'}">
+                    <strong>${fmt(gateApr)}</strong>
+                    <br><span style="font-size: 0.8em; color: var(--text-muted);">(est: ${fmt(gateEstApr)})</span>
+                </td>
                 <td class="num ${borrowRate > 0 ? 'cell-neutral' : 'cell-zero'}">${borrowRate > 0 ? fmt(borrowRate) : '—'}</td>
                 <td class="num cell-wd-fee" style="color:var(--text-primary); font-weight:600;"><small>$</small>${fmt(gateWd)}</td>
                 <td class="num ${netApr > 50 ? 'cell-positive' : netApr > 0 ? 'cell-neutral' : 'cell-negative'}"><strong>${fmt(netApr)}</strong></td>
