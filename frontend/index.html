@@ -41,35 +41,28 @@
 
     <!-- ====== KPI STRIP ====== -->
     <section class="kpi-strip">
-        <div class="kpi-card">
-            <div class="kpi-label">Opportunities</div>
-            <div class="kpi-value" id="kpi-total">—</div>
-        </div>
         <div class="kpi-card accent">
-            <div class="kpi-label">Top Net APR</div>
-            <div class="kpi-value" id="kpi-top-apr">—</div>
+            <div class="kpi-label">🔥 Best Net APR</div>
+            <div class="kpi-value" id="kpi-best-apr">—</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Avg Net APR</div>
-            <div class="kpi-value" id="kpi-avg-apr">—</div>
+            <div class="kpi-label">⚡ Tradable Opps</div>
+            <div class="kpi-value" id="kpi-opps-count">—</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">APR > 50%</div>
-            <div class="kpi-value" id="kpi-high">—</div>
+            <div class="kpi-label">📈 Rising Trends</div>
+            <div class="kpi-value" id="kpi-trend-count">0</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Last Updated</div>
-            <div class="kpi-value kpi-time" id="kpi-time">—</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">DB Records</div>
-            <div class="kpi-value" id="kpi-db-rows">—</div>
+            <div class="kpi-label">🕒 Last Update</div>
+            <div class="kpi-value kpi-time" id="kpi-last-update">—</div>
         </div>
     </section>
 
     <!-- ====== TAB NAVIGATION ====== -->
     <nav class="tab-nav">
         <button class="tab-btn active" data-tab="tab-opportunities">📊 Opportunities</button>
+        <button class="tab-btn" data-tab="tab-predictions">🚀 Predictions</button>
         <button class="tab-btn" data-tab="tab-sniper">🔫 Sniper Bot</button>
         <button class="tab-btn" data-tab="tab-browser">🌐 OKX Browser</button>
     </nav>
@@ -89,6 +82,10 @@
             <div class="filter-group">
                 <label for="filter-apr">Min APR %</label>
                 <input type="number" id="filter-apr" value="0" min="-100" max="1000" step="1">
+            </div>
+            <div class="filter-group">
+                <label for="filter-loan-size">Loan Size ($)</label>
+                <input type="number" id="filter-loan-size" value="1000" min="100" step="100">
             </div>
             <div class="filter-group">
                 <label for="filter-search">Search Token</label>
@@ -113,10 +110,13 @@
                 <thead>
                     <tr>
                         <th class="sortable" data-col="currency">Token</th>
+                        <th data-col="signal">Signal</th>
                         <th class="sortable num" data-col="gate_apr">Gate Earn %</th>
-                        <th class="sortable num" data-col="okx_loan_rate">OKX Loan %</th>
-                        <th class="sortable num" data-col="binance_loan_rate">Bin Loan %</th>
-                        <th class="sortable num active-sort" data-col="net_apr">Net APR %</th>
+                        <th class="sortable num" data-col="borrow_rate">Borrow Rate %</th>
+                        <th class="sortable num" data-col="gate_wd_fee_usd">Gate WD ($)</th>
+                        <th class="sortable num" data-col="net_apr">Net APR %</th>
+                        <th class="sortable num" data-col="daily_earn">Daily ($)</th>
+                        <th class="sortable num active-sort" data-col="effective_ev">Eff. EV ($)</th>
                         <th data-col="best_loan_source">Source</th>
                         <th class="sortable num" data-col="okx_avail_loan">Max Loan</th>
                         <th data-col="status">Status</th>
@@ -132,6 +132,45 @@
                 </tbody>
             </table>
         </main>
+    </div>
+
+    </div>
+
+    <!-- ====== TAB 4: PREDICTIONS ====== -->
+    <div class="tab-content" id="tab-predictions">
+        <div class="panel">
+            <h2>🚀 Predicted Rising Trends (1h History)</h2>
+            <p class="hint" style="margin-bottom: 20px;">
+                Tokens showing <strong>UPWARD MOMENTUM</strong> based on EMA (Exponential Moving Average) crossovers. 
+                <br><em>Requires at least 15-30 minutes of recorded data to be accurate.</em>
+            </p>
+            
+            <div id="pred-loading" class="status-box">
+                <div class="status-line info">⏳ Analyzing market trends...</div>
+            </div>
+            
+            <div id="pred-empty" class="status-box" style="display: none;">
+                <div class="status-line warning">📉 No strong uptrends detected yet. Collecting more data...</div>
+            </div>
+
+            <div id="pred-results" style="display: none; margin-top: 20px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Token</th>
+                            <th>Current APR</th>
+                            <th>Regime</th>
+                            <th>Signal</th>
+                            <th>Volatility</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pred-tbody">
+                        <!-- JS Injected -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- ====== TAB 2: SNIPER BOT ====== -->
@@ -277,6 +316,6 @@
 
     <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/static/js/app.js?v=20260212_1750"></script>
+    <script src="/static/js/app.js?v=20260213_1105"></script>
 </body>
 </html>

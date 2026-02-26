@@ -85,9 +85,41 @@ def init_db(db_path: Optional[str] = None) -> None:
                 tokens_collected INTEGER NOT NULL DEFAULT 0,
                 duration_ms INTEGER NOT NULL DEFAULT 0,
                 error       TEXT,
-                
-                -- For quick "when did we last run?" queries
                 UNIQUE(timestamp)
+            );
+
+            -- [PHASE 1] Cleaned/Feature Data
+            CREATE TABLE IF NOT EXISTS apr_features (
+                timestamp   TEXT    NOT NULL,
+                currency    TEXT    NOT NULL,
+                apr_raw     REAL,
+                apr_clean   REAL,       -- Post-Hampel
+                regime_prob TEXT,       -- JSON: {Low:0.1, High:0.9}
+                volatility  REAL,
+                PRIMARY KEY (currency, timestamp)
+            );
+
+            -- [PHASE 1] Survival Statistics Cache
+            CREATE TABLE IF NOT EXISTS survival_curves (
+                tier        TEXT    NOT NULL, -- '100-200', '200-400', '400+'
+                minute      INTEGER NOT NULL,
+                survival_prob REAL  NOT NULL,
+                updated_at  TEXT    NOT NULL,
+                PRIMARY KEY (tier, minute)
+            );
+
+            -- [PHASE 1] Ground-Truth Paper Trading (Supervision Signal)
+            CREATE TABLE IF NOT EXISTS paper_trades (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                currency        TEXT    NOT NULL,
+                entry_timestamp TEXT    NOT NULL,
+                exit_timestamp  TEXT,
+                entry_apr       REAL    NOT NULL,
+                exit_apr        REAL,
+                borrow_cost     REAL    DEFAULT 0,
+                withdrawal_fee  REAL    DEFAULT 0,
+                realized_pnl    REAL,   -- Actual profit/loss metric
+                exit_reason     TEXT    -- 'decay', 'stop_loss', 'horizon'
             );
         """)
 
@@ -97,6 +129,24 @@ def init_db(db_path: Optional[str] = None) -> None:
             conn.execute("ALTER TABLE apr_history ADD COLUMN data_type TEXT DEFAULT 'raw'")
         except Exception:
             pass  # Column likely exists
+
+        # Phase 3.5: Paper Trades Migration
+        columns_to_add = [
+            ("holding_minutes", "INTEGER"),
+            ("signal_snapshot_json", "TEXT"),
+            ("created_at", "TEXT")
+        ]
+        
+        for col_name, col_type in columns_to_add:
+            try:
+                conn.execute(f"ALTER TABLE paper_trades ADD COLUMN {col_name} {col_type}")
+            except Exception:
+                pass # Column likely exists
+                
+        # Rename/Alias check (SQLite doesn't support easy rename of columns, so we'll stick to existing mapping or add new ones if strictly needed)
+        # Required: borrow_cost_total. Existing: borrow_cost. We will use 'borrow_cost' as 'borrow_cost_total'.
+        # Required: entry_time. Existing: entry_timestamp. mapping is fine.
+
 
 
 def insert_apr_batch(records: list[dict], db_path: Optional[str] = None) -> int:
@@ -122,7 +172,7 @@ def insert_apr_batch(records: list[dict], db_path: Optional[str] = None) -> int:
                 # Quant: Explicitly store data_type ('raw' or 'opportunity')
                 data_type = rec.get('data_type', 'raw')
                 
-                conn.execute(
+                cursor = conn.execute(
                     """INSERT OR IGNORE INTO apr_history 
                        (timestamp, data_type, exchange, currency, apr, raw_payload)
                        VALUES (?, ?, ?, ?, ?, ?)""",
@@ -135,7 +185,7 @@ def insert_apr_batch(records: list[dict], db_path: Optional[str] = None) -> int:
                         json.dumps(rec.get('raw_payload')) if rec.get('raw_payload') else None,
                     )
                 )
-                inserted += conn.total_changes  # Will be 0 if IGNORE'd
+                inserted += cursor.rowcount  # Correctly count checking rowcount
             except sqlite3.Error:
                 continue  # Skip bad rows, don't crash batch
         
@@ -238,3 +288,79 @@ def get_token_history(token: str, hours: int = 24) -> list[dict]:
             })
             
         return results
+
+
+def get_latest_features(limit: int = 100) -> list[dict]:
+    """
+    Fetch the latest probabilistic features for active tokens.
+    Used for the /api/predictions endpoint.
+    """
+    with get_connection() as conn:
+        # Get the most recent timestamp for each currency
+        # This query assumes apr_features is updated regularly
+        # We join with apr_features to get the full row
+        
+        # Simple approach: Get all rows from the last known timestamp
+        # First find latest timestamp
+        latest_ts_row = conn.execute("SELECT MAX(timestamp) FROM apr_features").fetchone()
+        if not latest_ts_row or not latest_ts_row[0]:
+            return []
+            
+        latest_ts = latest_ts_row[0]
+        
+        cursor = conn.execute(
+            """
+            SELECT currency, apr_clean, regime_prob, volatility, timestamp
+            FROM apr_features 
+            WHERE timestamp = ?
+            ORDER BY apr_clean DESC
+            LIMIT ?
+            """,
+            (latest_ts, limit)
+        )
+        
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                'token': row['currency'],
+                'timestamp': row['timestamp'],
+                'apr_clean': row['apr_clean'],
+                'regime_prob': json.loads(row['regime_prob']),
+                'volatility': row['volatility']
+            })
+            
+        return results
+
+
+def get_last_known_opportunities() -> tuple[list[dict], str]:
+    """
+    Fetch the most recent batch of opportunities from history.
+    Returns: (data_list, timestamp_str)
+    """
+    with get_connection() as conn:
+        # 1. Find the latest timestamp
+        latest = conn.execute(
+            "SELECT MAX(timestamp) FROM apr_history WHERE data_type = 'opportunity'"
+        ).fetchone()
+        
+        if not latest or not latest[0]:
+            return [], None
+            
+        timestamp = latest[0]
+        
+        # 2. Get all records for that timestamp
+        cursor = conn.execute(
+            "SELECT raw_payload FROM apr_history WHERE timestamp = ? AND data_type = 'opportunity'",
+            (timestamp,)
+        )
+        
+        results = []
+        for row in cursor.fetchall():
+            if row['raw_payload']:
+                try:
+                    payload = json.loads(row['raw_payload'])
+                    results.append(payload)
+                except json.JSONDecodeError:
+                    continue
+        
+        return results, timestamp

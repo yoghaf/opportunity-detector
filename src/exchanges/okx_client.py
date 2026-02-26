@@ -475,3 +475,54 @@ class OKXClient:
             logger.error(f"Error fetching price for {symbol}: {e}")
             
         return 0.0
+
+    def get_withdrawal_fee(self, currency):
+        """Get withdrawal fee for a specific currency (default chain)"""
+        try:
+            # Check Cache
+            now = time.time()
+            if hasattr(self, '_wd_fee_cache') and self._wd_fee_cache and (now - getattr(self, '_wd_fee_cache_time', 0) < 3600):
+                return self._wd_fee_cache.get(currency.upper(), 0.0)
+                
+            # Fetch ALL currencies
+            # /api/v5/asset/currencies without ccy param returns all
+            logger.info("Fetching OKX Withdrawal Fees (All Currencies)...")
+            data = self._make_request("GET", "/api/v5/asset/currencies")
+            
+            if not data:
+                return 0.0
+            
+            # Build cache
+            new_cache = {}
+            # Data is a list of currency objects
+            # Each object has 'ccy', 'chain', 'minFee', 'maxFee'
+            # Note: One currency can have multiple chains (multiple entries in data list)
+            
+            # Group by currency to find min fee
+            temp_fees = {} 
+            
+            for item in data:
+                ccy = item.get('ccy')
+                can_wd = item.get('canWd')
+                if can_wd == True or str(can_wd).lower() == 'true':
+                    fee = float(item.get('minFee', 0))
+                    if ccy not in temp_fees:
+                        temp_fees[ccy] = []
+                    temp_fees[ccy].append(fee)
+            
+            for ccy, fees in temp_fees.items():
+                if fees:
+                    new_cache[ccy] = min(fees)
+                else:
+                    new_cache[ccy] = 0.0
+            
+            self._wd_fee_cache = new_cache
+            self._wd_fee_cache_time = now
+            logger.info(f"Cached withdrawal fees for {len(new_cache)} tokens")
+            
+            return self._wd_fee_cache.get(currency.upper(), 0.0)
+            
+        except Exception as e:
+            logger.error(f"OKX WD Fee Error ({currency}): {e}")
+            return 0.0
+

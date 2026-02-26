@@ -23,6 +23,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 from contextlib import asynccontextmanager
+import pandas as pd
+import numpy as np
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -36,8 +38,9 @@ from src.exchanges.gate_client import GateClient
 from src.exchanges.okx_client import OKXClient
 from src.exchanges.binance_client import BinanceClient
 from src.strategies.opportunity_finder import OpportunityFinder
-from src.prediction.db import init_db, get_db_stats, get_token_history
+from src.prediction.db import init_db, get_db_stats, get_token_history, get_latest_features, get_last_known_opportunities
 from src.strategies.prediction import calculate_ema, analyze_trend
+from src.prediction.pipeline import PredictionPipeline
 
 # ... (existing imports)
 
@@ -53,10 +56,12 @@ class AppState:
     """Shared state across the app."""
     def __init__(self):
         self.finder: Optional[OpportunityFinder] = None
+        self.pipeline: Optional[PredictionPipeline] = None
         self.latest_data: list[dict] = []
         self.last_fetch_time: Optional[str] = None
         self.connected_clients: list[WebSocket] = []
         self.refresh_task: Optional[asyncio.Task] = None
+        self.prediction_task: Optional[asyncio.Task] = None
 
 state = AppState()
 
@@ -72,16 +77,36 @@ async def lifespan(app: FastAPI):
     init_db()
     
     # Init exchange clients
-    gate = GateClient()
-    okx = OKXClient()
-    binance = BinanceClient()
-    state.finder = OpportunityFinder(gate, okx, binance)
+    try:
+        gate = GateClient()
+        okx = OKXClient()
+        binance = BinanceClient()
+        state.finder = OpportunityFinder(gate, okx, binance)
+    except Exception as e:
+        logger.error(f"❌ Failed to init clients: {e}")
+
+    # Init Prediction Pipeline (Phase 2)
+    try:
+        state.pipeline = PredictionPipeline()
+        # Optional: Run maintenance once on startup
+        # state.pipeline.update_survival_curves()
+        logger.info("🧠 Prediction Pipeline initialized.")
+    except Exception as e:
+        logger.error(f"❌ Failed to init prediction pipeline: {e}")
     
-    # Initial data fetch
-    await refresh_data()
-    
-    # Start background refresh loop
+    # INSTANT STARTUP: Load latest snapshot from DB
+    try:
+        cached_data, cached_ts = get_last_known_opportunities()
+        if cached_data:
+            state.latest_data = clean_floats(cached_data)
+            state.last_fetch_time = cached_ts
+            logger.info(f"⚡ Instant Startup: Loaded {len(cached_data)} records from {cached_ts}")
+    except Exception as e:
+        logger.error(f"⚠️ Failed to load cached data: {e}")
+
+    # Start background refresh loop (it will fetch data immediately)
     state.refresh_task = asyncio.create_task(background_refresh_loop())
+    state.prediction_task = asyncio.create_task(background_prediction_loop())
     
     logger.info("✅ API ready. Serving on http://localhost:8001")
     yield
@@ -89,6 +114,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     if state.refresh_task:
         state.refresh_task.cancel()
+    if state.prediction_task:
+        state.prediction_task.cancel()
     logger.info("🛑 API shutdown complete.")
 
 # ============================================================
@@ -112,39 +139,83 @@ FRONTEND_DIR = os.path.join(
 REFRESH_INTERVAL = 60  # seconds
 
 def clean_floats(obj):
-    """Recursively replace NaN/Infinity with 0 for JSON safety."""
+    """Recursively replace NaN/Infinity and handle non-serializable types."""
+    import math
     if isinstance(obj, float):
-        if obj != obj: return 0  # NaN check
-        if obj == float('inf') or obj == float('-inf'): return 0
+        if math.isnan(obj): return 0
+        if math.isinf(obj): return 0
         return obj
     elif isinstance(obj, dict):
         return {k: clean_floats(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [clean_floats(v) for v in obj]
+    elif pd.isna(obj): # Handles pd.NA, pd.NaT if passed directly
+        return None
     return obj
 
 async def refresh_data():
     """Fetch fresh data from all exchanges."""
+    if not state.finder:
+        logger.warning("⚠️ Finder not initialized yet")
+        return
+
     try:
         loop = asyncio.get_event_loop()
         df = await loop.run_in_executor(None, state.finder.find_opportunities)
         
         if df is not None and not df.empty:
+            logger.info("DF received from finder. Converting to raw_data...")
             # Convert DataFrame to list of dicts for JSON
-            raw_data = df.fillna(0).to_dict(orient='records')
+            # Do NOT use fillna(0) as it hides missing data (None/NaN)
+            # We want frontend to see null for "Unknown"
+            # FIX: Cast to object to prevent float columns from forcing None -> NaN -> 0
+            raw_data = df.astype(object).where(pd.notnull(df), None).to_dict(orient='records')
+            
+            logger.info("Cleaning floats...")
             state.latest_data = clean_floats(raw_data)
             state.last_fetch_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             logger.info(f"📊 Data refreshed: {len(state.latest_data)} opportunities")
             
+            # QUANT: Record history for prediction
+            try:
+                # Add timestamp to records
+                logger.info("Preparing DB records...")
+                db_records = []
+                for d in raw_data:
+                    # Create a copy to avoid mutating raw_data
+                    rec = d.copy() 
+                    rec['timestamp'] = state.last_fetch_time
+                    rec['data_type'] = 'opportunity' 
+                    rec['apr'] = rec.get('net_apr')
+                    # Fix: Store the full record as raw_payload so we can reconstruct it on startup
+                    rec['raw_payload'] = d
+                    db_records.append(rec)
+                
+                # Insert into DB (non-blocking ideally, but SQLite is fast enough here)
+                from src.prediction.db import insert_apr_batch
+                logger.info("Inserting into DB...")
+                inserted = insert_apr_batch(db_records)
+                logger.info(f"💾 History recorded: +{inserted} rows")
+            except Exception as e:
+                logger.error(f"❌ Failed to record history: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+
             # Push to all WebSocket clients
+            logger.info("Broadcasting update...")
             await broadcast_update()
         else:
             logger.warning("⚠️ No data returned from exchanges")
     except Exception as e:
         logger.error(f"❌ Data refresh failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 async def background_refresh_loop():
     """Periodically refresh data."""
+    # Initial fetch immediately
+    await refresh_data()
+    
     while True:
         await asyncio.sleep(REFRESH_INTERVAL)
         try:
@@ -154,17 +225,44 @@ async def background_refresh_loop():
         except Exception as e:
             logger.error(f"❌ Background refresh error: {e}")
 
+async def background_prediction_loop():
+    """Periodically run the Probabilistic Prediction Pipeline."""
+    # Wait a bit for data to populate
+    await asyncio.sleep(10) 
+    
+    while True:
+        try:
+            if state.pipeline:
+                logger.info("🧠 Running Prediction Pipeline...")
+                await asyncio.to_thread(state.pipeline.run_cycle)
+                logger.info("🧠 Pipeline cycle complete.")
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"❌ Prediction pipeline error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
+        # Run every 2 minutes
+        await asyncio.sleep(120)
+
 async def broadcast_update():
     """Push latest data to all connected WebSocket clients."""
     if not state.connected_clients:
         return
     
-    message = json.dumps({
-        "type": "data_update",
-        "timestamp": state.last_fetch_time,
-        "count": len(state.latest_data),
-        "data": state.latest_data,
-    })
+    try:
+        message = json.dumps({
+            "type": "data_update",
+            "timestamp": state.last_fetch_time,
+            "count": len(state.latest_data),
+            "data": state.latest_data,
+        })
+    except Exception as e:
+        logger.error(f"❌ JSON Serialization Failed: {e}")
+        # Fallback: Try to find the bad record
+        logger.error(f"Sample data: {state.latest_data[:1]}")
+        return
     
     disconnected = []
     for ws in state.connected_clients:
@@ -192,13 +290,15 @@ async def get_opportunities(
     if min_apr > 0:
         data = [d for d in data if d.get('net_apr', 0) >= min_apr]
     
-    # Filter by source
+    # Filter by source - STRICT (Financial Integrity)
     if source == "okx":
-        data = [d for d in data if d.get('okx_loan_rate', 0) > 0]
+        data = [d for d in data if d.get('best_loan_source') == 'OKX']
     elif source == "binance":
-        data = [d for d in data if d.get('binance_loan_rate', 0) > 0]
+        data = [d for d in data if d.get('best_loan_source') == 'Binance']
     
     # Limit
+    # Sort descending by Net APR (handle None values safely) to ensure best opps are kept
+    data.sort(key=lambda x: (x.get('net_apr') or -999.0), reverse=True)
     data = data[:limit]
     
     return {
@@ -236,6 +336,73 @@ async def get_history(token: str, hours: int = 24):
         }
     except Exception as e:
         logger.error(f"Failed to fetch history for {token}: {e}")
+        return {"error": str(e)}
+
+
+@app.get("/api/predictions")
+async def get_predictions(limit: int = 20):
+    """
+    Get top probabilistic predictions (Phase 2).
+    Returns list of tokens with Regime, Volatility, and Probabilities.
+    """
+    try:
+        loop = asyncio.get_event_loop()
+        # Fetch latest features from DB
+        data = await loop.run_in_executor(None, get_latest_features, limit)
+        
+        # Enrich with badges/formatting
+        formatted = []
+        for d in data:
+            regime_probs = d['regime_prob']
+            
+            # Determine dominant regime
+            dominant_regime = max(regime_probs, key=regime_probs.get)
+            confidence = regime_probs[dominant_regime]
+            
+            # Simple signal logic for FE
+            signal = "NEUTRAL"
+            if dominant_regime == "Rising" and confidence > 0.6:
+                signal = "BUY"
+            elif dominant_regime == "Decay" and confidence > 0.6:
+                signal = "SELL"
+                
+            # QUANT FIX (2026-02-16): User Request - Show ONLY "Rising" predictions
+            # "hanya nampilin yang bakalan diprediksi naik aja"
+            if dominant_regime != "Rising":
+                continue
+
+            formatted.append({
+                "token": d['token'],
+                "current_apr": d['apr_clean'],
+                "regime": dominant_regime,
+                "confidence": round(confidence * 100, 1),
+                "signal": signal,
+                "volatility": round(d['volatility'], 2),
+                "probs": regime_probs
+            })
+            
+        return {
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "count": len(formatted),
+            "data": formatted,
+            "engine": "v2_probabilistic"
+        }
+    except Exception as e:
+        logger.error(f"Prediction error: {e}")
+        return {"error": str(e)}
+
+@app.get("/api/validation/status")
+async def get_validation_status(days: int = 30):
+    """
+    Get Phase 3.5 Validation Metrics (Paper Trading).
+    Used to gate the Sniper Bot (Phase 4).
+    """
+    try:
+        from src.prediction.simulation import PerformanceMonitor
+        stats = PerformanceMonitor.get_stats(days=days)
+        return stats
+    except Exception as e:
+        logger.error(f"Validation stats error: {e}")
         return {"error": str(e)}
 
 @app.post("/api/refresh")

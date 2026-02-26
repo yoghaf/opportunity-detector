@@ -1,9 +1,14 @@
 # src/main.py
 import time
 import sys
+import os
 import subprocess
 import pandas as pd
 from datetime import datetime
+
+# Add project root to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config.settings import Config
 from src.exchanges.gate_client import GateClient
 from src.exchanges.okx_client import OKXClient

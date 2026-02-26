@@ -386,6 +386,22 @@ body {
 .cell-neutral  { color: var(--text-secondary); }
 .cell-zero     { color: var(--text-muted); }
 
+.cell-net-apr {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.cell-signal {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+.signal-early { color: var(--green); }
+.signal-weak  { color: var(--amber); }
+.signal-flat  { color: var(--text-muted); }
+.signal-fade  { color: var(--red); }
+
 .cell-source {
     font-size: 0.72rem;
     font-weight: 600;

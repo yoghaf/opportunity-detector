@@ -58,11 +58,9 @@ function debounce(func, wait) {
 const state = {
     data: [],               // Raw opportunity data from server
     filtered: [],           // After client-side filters applied
-    sortCol: 'net_apr',
-    sortAsc: false,
+    sortCol: 'net_apr',     // Default sort: Net APR
+    sortAsc: false,         // Descending
     ws: null,
-    wsRetries: 0,
-    maxWsRetries: 50,
     lastUpdate: null,
 };
 
@@ -79,15 +77,14 @@ const dom = {
     clock:          $('#clock'),
     btnRefresh:     $('#btn-refresh'),
     // KPIs
-    kpiTotal:       $('#kpi-total'),
-    kpiTopApr:      $('#kpi-top-apr'),
-    kpiAvgApr:      $('#kpi-avg-apr'),
-    kpiHigh:        $('#kpi-high'),
-    kpiTime:        $('#kpi-time'),
-    kpiDbRows:      $('#kpi-db-rows'),
+    kpiBestApr:     $('#kpi-best-apr'),
+    kpiOppsCount:   $('#kpi-opps-count'),
+    kpiTrendCount:  $('#kpi-trend-count'),
+    kpiLastUpdate:  $('#kpi-last-update'),
     // Filters
     filterSource:   $('#filter-source'),
     filterApr:      $('#filter-apr'),
+    filterLoanSize: $('#filter-loan-size'), // New
     filterSearch:   $('#filter-search'),
     filterAvailable:$('#filter-available'),
     filteredCount:  $('#filtered-count'),
@@ -215,12 +212,15 @@ function populateTokenDropdowns(data) {
 function applyFiltersAndRender() {
     let data = [...state.data];
     
-    // Source filter
+    // Source filter (Server handles strict filtering, but we keep local logic for immediate UI feedback if needed, 
+    // or as a backup if we rely on cached state).
+
+    // Source filter - Client Side (Visual only, backing up server)
     const source = dom.filterSource.value;
     if (source === 'okx') {
-        data = data.filter(d => (d.okx_loan_rate || 0) > 0);
+        data = data.filter(d => d.best_loan_source === 'OKX');
     } else if (source === 'binance') {
-        data = data.filter(d => (d.binance_loan_rate || 0) > 0);
+        data = data.filter(d => d.best_loan_source === 'Binance');
     }
     
     // APR filter
@@ -282,12 +282,37 @@ function renderTable(data) {
             const source = d.best_loan_source || 'None';
             const isAvailable = d.available === true || d.status === '✅ AVAILABLE';
             
+            const effEv = d.effective_ev || 0;
+            const gateWd = d.gate_wd_fee_usd || 0;
+            const okxWd = d.okx_wd_fee_usd || 0;
+            const binWd = d.binance_wd_fee_usd || 0;
+
+            // Determine Borrow Rate based on source
+            let borrowRate = 0;
+            if (source.toLowerCase().includes('okx')) borrowRate = okxRate;
+            else if (source.toLowerCase().includes('binance')) borrowRate = binanceRate;
+
+            // --- New Calculation Logic ---
+            const loanSize = parseFloat(dom.filterLoanSize.value) || 1000;
+            const dailyEarn = (netApr / 100 / 365) * loanSize;
+            
+            // Mock Signal (Placeholder Phase 7)
+            const signals = ['▲ Early', '▲ Weak', '■ Flat', '▼ Fading'];
+            // Hash token name to get consistent signal for demo
+            const hash = token => token.split('').reduce((a,b)=>(((a<<5)-a)+b.charCodeAt(0))|0, 0);
+            const sigIndex = Math.abs(hash(d.currency)) % 4;
+            const signalText = signals[sigIndex];
+            const signalClass = sigIndex === 0 ? 'signal-early' : sigIndex === 1 ? 'signal-weak' : sigIndex === 3 ? 'signal-fade' : 'signal-flat';
+
             return `<tr>
                 <td class="cell-token" onclick="window.openChartModal('${d.currency}')" style="cursor:pointer; text-decoration:underline;">${esc(d.currency || '—')} 📊</td>
+                <td class="cell-signal ${signalClass}">${signalText}</td>
                 <td class="num ${gateApr > 50 ? 'cell-positive' : 'cell-neutral'}">${fmt(gateApr)}</td>
-                <td class="num ${okxRate > 0 ? 'cell-neutral' : 'cell-zero'}">${okxRate > 0 ? fmt(okxRate) : '—'}</td>
-                <td class="num ${binanceRate > 0 ? 'cell-neutral' : 'cell-zero'}">${binanceRate > 0 ? fmt(binanceRate) : '—'}</td>
+                <td class="num ${borrowRate > 0 ? 'cell-neutral' : 'cell-zero'}">${borrowRate > 0 ? fmt(borrowRate) : '—'}</td>
+                <td class="num cell-wd-fee" style="color:var(--text-primary); font-weight:600;"><small>$</small>${fmt(gateWd)}</td>
                 <td class="num ${netApr > 50 ? 'cell-positive' : netApr > 0 ? 'cell-neutral' : 'cell-negative'}"><strong>${fmt(netApr)}</strong></td>
+                <td class="num cell-daily" style="font-weight:700; color:var(--green);"><small>$</small>${fmt(dailyEarn)}</td>
+                <td class="num cell-ev ${effEv > 0 ? 'cell-positive' : 'cell-negative'}" style="font-weight:700;"><small>$</small>${fmt(effEv)}</td>
                 <td><span class="cell-source ${sourceClass(source)}">${source}</span></td>
                 <td class="num">${maxLoan > 0 ? fmtInt(maxLoan) : '—'}</td>
                 <td class="cell-status">${isAvailable ? '✅' : '❌'}</td>
@@ -310,17 +335,16 @@ function updateKPIs() {
     
     const netAprs = data.map(d => d.net_apr || 0);
     const topApr = Math.max(...netAprs);
-    const avgApr = netAprs.reduce((a, b) => a + b, 0) / netAprs.length;
-    const highCount = netAprs.filter(a => a > 50).length;
+    // const avgApr = netAprs.reduce((a, b) => a + b, 0) / netAprs.length;
+    // const highCount = netAprs.filter(a => a > 50).length;
     
-    dom.kpiTotal.textContent = data.length;
-    dom.kpiTopApr.textContent = fmt(topApr) + '%';
-    dom.kpiAvgApr.textContent = fmt(avgApr) + '%';
-    dom.kpiHigh.textContent = highCount;
+    dom.kpiOppsCount.textContent = data.length;
+    dom.kpiBestApr.textContent = fmt(topApr) + '%';
+    // dom.kpiTrendCount.textContent = '0'; // Placeholder logic
     
     if (state.lastUpdate) {
         const d = new Date(state.lastUpdate);
-        dom.kpiTime.textContent = d.toLocaleTimeString();
+        dom.kpiLastUpdate.textContent = d.toLocaleTimeString();
     }
 }
 
@@ -333,7 +357,7 @@ async function fetchCollectorStats() {
         const stats = await res.json();
         
         if (stats.total_observations != null) {
-            dom.kpiDbRows.textContent = stats.total_observations.toLocaleString();
+            // dom.kpiDbRows.textContent = stats.total_observations.toLocaleString(); // Removed KPI
             dom.collectorStatus.className = 'pill pill-collector active';
             dom.collectorStatus.innerHTML = `<span class="dot"></span> ${stats.unique_tokens || 0} tokens`;
         } else {
@@ -377,9 +401,15 @@ function initSorting() {
 // Filter event listeners
 // ============================================================
 function initFilters() {
-    dom.filterSource.addEventListener('change', applyFiltersAndRender);
+    dom.filterSource.addEventListener('change', () => {
+        // Trigger server fetch when source changes
+        fetchDataREST(); 
+        // Also apply local filter purely for UI responsiveness until new data arrives
+        applyFiltersAndRender();
+    });
     dom.filterAvailable.addEventListener('change', applyFiltersAndRender);
     dom.filterApr.addEventListener('input', debounce(applyFiltersAndRender, 300));
+    dom.filterLoanSize.addEventListener('input', debounce(applyFiltersAndRender, 300)); // New
     dom.filterSearch.addEventListener('input', debounce(applyFiltersAndRender, 200));
 }
 
@@ -394,13 +424,9 @@ function initRefresh() {
         try {
             // Try WebSocket first
             if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-                state.ws.send('refresh');
-            } else {
-                // REST fallback
-                const res = await fetch('/api/refresh', { method: 'POST' });
                 const json = await res.json();
                 if (json.status === 'ok') {
-                    // Data will arrive via WebSocket, or fetch manually
+                    // Trigger manual fetch if WS doesn't push
                     const dataRes = await fetch('/api/opportunities');
                     const dataJson = await dataRes.json();
                     handleDataUpdate(dataJson);
@@ -425,49 +451,22 @@ function updateClock() {
     dom.clock.textContent = now.toLocaleTimeString();
 }
 
-// ============================================================
-// Utility functions
-// ============================================================
-function fmt(n) {
-    return (typeof n === 'number') ? n.toFixed(2) : '0.00';
-}
 
-function fmtInt(n) {
-    return (typeof n === 'number') ? Math.round(n).toLocaleString() : '0';
-}
-
-function esc(s) {
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-}
-
-function sourceClass(s) {
-    if (s === 'OKX') return 'source-okx';
-    if (s === 'Binance') return 'source-binance';
-    return 'source-none';
-}
-
-function debounce(fn, ms) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), ms);
-    };
-}
 
 // ============================================================
 // REST fallback (if WebSocket not available)
 // ============================================================
 async function fetchDataREST() {
     try {
-        const res = await fetch('/api/opportunities');
+        const source = dom.filterSource.value;
+        const res = await fetch(`/api/opportunities?source=${source}`);
         const json = await res.json();
         handleDataUpdate(json);
     } catch (err) {
         console.error('[REST] Fetch failed:', err);
     }
 }
+
 
 // ============================================================
 // Tab navigation
@@ -718,10 +717,106 @@ async function fetchSessionStatus() {
 }
 
 // ============================================================
+// Predictions Logic
+// ============================================================
+// ============================================================
+// Predictions Logic (Phase 2: Probabilistic)
+// ============================================================
+async function loadPredictions() {
+    const tbody = $('#pred-tbody');
+    const loading = $('#pred-loading');
+    const empty = $('#pred-empty');
+    const results = $('#pred-results');
+    
+    if (!tbody) return;
+    
+    // Reset UI
+    results.style.display = 'none';
+    empty.style.display = 'none';
+    loading.style.display = 'block';
+    
+    try {
+        const res = await fetch('/api/predictions?limit=20');
+        const json = await res.json();
+        const data = json.data || [];
+        
+        loading.style.display = 'none';
+        
+        if (data.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+        
+        results.style.display = 'block';
+        
+        const rows = data.map(d => {
+            // Unpack Probabilistic Data
+            const regime = d.regime || 'Unknown';
+            const signal = d.signal || 'NEUTRAL';
+            const confidence = d.confidence || 0;
+            const vol = d.volatility || 0;
+            
+            // Visual Styles associated with Regime
+            let regimeClass = 'badge-idle';
+            if (regime === 'Rising') regimeClass = 'badge-running'; // Green
+            else if (regime === 'High') regimeClass = 'badge-collecting'; // Blue
+            else if (regime === 'Decay') regimeClass = 'badge-error'; // Red
+            
+            // Signal Badge
+            let signalClass = 'signal-flat';
+            let signalIcon = '⚪ Neutral';
+            if (signal === 'BUY') {
+                signalClass = 'signal-strong';
+                signalIcon = '🟢 LONG';
+            } else if (signal === 'SELL') {
+                signalClass = 'signal-fade'; // using fade style for sell/red
+                signalIcon = '🔴 SHORT';
+            } 
+            
+            // Confidence Bar Color
+            let barColor = 'var(--text-muted)';
+            if (confidence > 80) barColor = 'var(--green)';
+            else if (confidence > 50) barColor = 'var(--blue)';
+            else if (confidence < 30) barColor = 'var(--red)';
+
+            return `<tr>
+                <td class="cell-token" onclick="window.openChartModal('${d.token}')" style="cursor:pointer; text-decoration:underline;">${esc(d.token)} 📊</td>
+                <td class="num font-bold">${fmt(d.current_apr)}%</td>
+                <td><span class="${regimeClass}" style="font-size:0.8rem; padding: 2px 8px;">${regime}</span></td>
+                <td class="cell-signal ${signalClass}">${signalIcon}</td>
+                <td class="num">${vol.toFixed(3)}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="progress-bar" style="width:80px; background:var(--bg-tertiary)">
+                            <div class="progress-fill" style="width: ${confidence}%; background:${barColor}"></div>
+                        </div>
+                        <small>${confidence}%</small>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        
+        tbody.innerHTML = rows.join('');
+        
+    } catch (err) {
+        loading.innerHTML = `<div class="status-line error">❌ Failed to load predictions: ${err.message}</div>`;
+    }
+}
+
+function initPredictions() {
+    const btn = document.querySelector('[data-tab="tab-predictions"]');
+    if (btn) {
+        btn.addEventListener('click', loadPredictions);
+    }
+}
+
+
+// ============================================================
 // Bootstrap
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
+    initPredictions();
     initSorting();
     initFilters();
     initRefresh();
@@ -751,7 +846,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (state.data.length === 0) {
             console.log('[REST] WS data not received, falling back to REST');
-            fetchDataREST();
+            fetchDataREST().catch(err => {
+                const el = document.getElementById('loading');
+                if (el) el.innerHTML = `<div class="status-line error">❌ Connection Failed: Server Unreachable<br><small>Check python dev.py console</small></div>`;
+            });
         }
     }, 3000);
 });
@@ -908,46 +1006,6 @@ function renderChart(ctx, history, token) {
     });
 }
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-function fmt(val) {
-    if (val === undefined || val === null) return '—';
-    const num = parseFloat(val);
-    if (isNaN(num)) return '—';
-    return num.toFixed(2);
-}
 
-function fmtInt(val) {
-    if (val === undefined || val === null) return '—';
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return '—';
-    return num.toLocaleString();
-}
 
-function esc(str) {
-    if (!str) return '';
-    return str.replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&#039;");
-}
 
-function sourceClass(source) {
-    if (!source) return '';
-    const s = source.toLowerCase();
-    if (s.includes('gate')) return 'source-gate';
-    if (s.includes('okx')) return 'source-okx';
-    if (s.includes('binance')) return 'source-binance';
-    return '';
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), wait);
-    };
-}

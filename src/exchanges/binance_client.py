@@ -263,5 +263,57 @@ class BinanceClient:
             rates = self.get_margin_loan_rates(batch)
             all_rates.extend(rates)
         
+        
         logger.info(f"Binance Margin Batch: {len(all_rates)} tokens processed from {len(assets)} requested")
         return all_rates
+
+    def get_withdrawal_fee(self, currency):
+        """Get withdrawal fee for a specific currency (default chain)"""
+        if not self.enabled:
+            return 0.0
+
+        # Check in-memory cache first
+        now = time.time()
+        if hasattr(self, '_wd_fee_cache') and self._wd_fee_cache and (now - getattr(self, '_wd_fee_cache_time', 0) < 3600):
+            return self._wd_fee_cache.get(currency.upper(), 0.0)
+
+        # ----------------------------------------
+        # Optimization: Fetch ALL configs once
+        # ----------------------------------------
+        # /sapi/v1/capital/config/getall returns ALL coins
+        try:
+            logger.info("Fetching Binance Withdrawal Fees (Global Config)...")
+            data = self._make_request("/sapi/v1/capital/config/getall")
+            
+            if not data:
+                return 0.0
+            
+            # Build cache
+            new_cache = {}
+            for item in data:
+                coin = item.get('coin')
+                network_list = item.get('networkList', [])
+                if not network_list:
+                    new_cache[coin] = 0.0
+                    continue
+                
+                # Find minimum withdrawal fee among enabled networks
+                fees = []
+                for net in network_list:
+                    if net.get('withdrawEnable') is True:
+                        fees.append(float(net.get('withdrawFee')))
+                
+                if fees:
+                    new_cache[coin] = min(fees)
+                else:
+                    new_cache[coin] = 0.0
+            
+            self._wd_fee_cache = new_cache
+            self._wd_fee_cache_time = now
+            logger.info(f"Cached withdrawal fees for {len(new_cache)} tokens")
+            
+            return self._wd_fee_cache.get(currency.upper(), 0.0)
+            
+        except Exception as e:
+            logger.error(f"Binance WD Fee Error ({currency}): {e}")
+            return 0.0

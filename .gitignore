@@ -47,6 +47,12 @@ test-results/
 *.key
 *.crt
 *.p12
+okx_session.json
+apr_history.db
+*.pem
+*.key
+*.crt
+*.p12
 
 # ================================
 # OS / Temp / Misc
@@ -55,3 +61,4 @@ test-results/
 *.swp
 *.bak
 .cache/
+NUL

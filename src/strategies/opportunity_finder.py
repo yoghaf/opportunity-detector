@@ -53,6 +53,11 @@ class OpportunityFinder:
         self.gate_client = gate_client
         self.okx_client = okx_client
         self.binance_client = binance_client
+        
+        # Fee Cache
+        self.fee_cache = {}
+        self.last_fee_update = None
+        self.FEE_UPDATE_INTERVAL = 3600 # 1 hour
     
     def get_gate_data(self):
         rates = self.gate_client.get_simple_earn_rates()
@@ -268,14 +273,164 @@ class OpportunityFinder:
         
         return merged
     
+    def get_token_price(self, token):
+        """Get token price in USDT (with cache)"""
+        now = datetime.now()
+        
+        # Check cache
+        cache_key = f"{token}_price"
+        if cache_key in self.fee_cache:
+            cache_data = self.fee_cache[cache_key]
+            # Refresh price every 5 minutes
+            if (now - cache_data['timestamp']).total_seconds() < 300:
+                return cache_data['price']
+        
+        # Helper: Local lookup from bulk cache (populated in find_opportunities)
+        if hasattr(self, '_bulk_price_cache') and token in self._bulk_price_cache:
+             price = self._bulk_price_cache[token]
+             self.fee_cache[cache_key] = {'timestamp': now, 'price': price}
+             return price
+
+        # Fetch fresh price (fallback)
+        
+        # 0. Handle Stablecoins
+        if token in ['USDT', 'USDC', 'DAI', 'FDUSD', 'TUSD']:
+            self.fee_cache[cache_key] = {'timestamp': now, 'price': 1.0}
+            return 1.0
+
+        price = 0.0
+        
+        # 1. Try Gate
+        try:
+            if self.gate_client:
+                price = self.gate_client.get_ticker_price(token)
+        except Exception:
+            pass
+            
+        # 2. Try OKX
+        if price <= 0 and self.okx_client:
+            try:
+                price = self.okx_client.get_ticker_price(token)
+            except Exception:
+                pass
+                
+        # 3. Try Binance (needs implementation, but let's stick to OKX for now)
+        
+        if price <= 0:
+             # logger.warning(f"Failed to fetch price for {token}")
+             pass
+        
+        # Update cache
+        self.fee_cache[cache_key] = {
+            'timestamp': now,
+            'price': price
+        }
+        return price
+
+    def _prefetch_prices(self):
+        """Fetch all prices at once to avoid N+1"""
+        try:
+             if self.gate_client:
+                 logger.info("Prefetching Gate prices...")
+                 self._bulk_price_cache = self.gate_client.get_all_tickers()
+                 logger.info(f"Prefetched {len(self._bulk_price_cache)} prices from Gate")
+        except Exception as e:
+             logger.error(f"Prefetch error: {e}")
+             self._bulk_price_cache = {}
+
+    def get_token_wd_fees(self, token):
+        """Get withdrawal fees for a token from all exchanges (with caching)"""
+        now = datetime.now()
+        
+        # Check cache
+        if token in self.fee_cache:
+            cache_data = self.fee_cache[token]
+            # Refresh if older than 1 hour
+            if (now - cache_data['timestamp']).total_seconds() < 3600:
+                return cache_data['fees']
+        
+        # Fetch fresh data
+        # Check bulk cache first
+        gate_fee_usd = None
+        if hasattr(self, '_bulk_gate_fee_cache') and token in self._bulk_gate_fee_cache:
+             gate_fee_usd = self._bulk_gate_fee_cache[token]
+        else:
+             # Fallback to single call
+             gate_fee_usd = self.gate_client.get_withdrawal_fee(token) if self.gate_client else None
+        
+        # OKX/Binance return Token Amount (standard CEX behavior)
+        okx_fee = self.okx_client.get_withdrawal_fee(token) if self.okx_client else 0.0
+        binance_fee = self.binance_client.get_withdrawal_fee(token) if self.binance_client else 0.0
+        
+        # Get Price for USD calculation
+        price = self.get_token_price(token)
+        
+        # --- LOGIC UPDATE: Strict USD Conversion & Sanity Checks ---
+        
+        # 1. Gate (Already USD or None)
+        # If None, it means Non-Tradable (no valid chain)
+        
+        # 2. OKX (Coin Units -> USD)
+        if okx_fee > 0 and price > 0:
+            okx_wd_fee_usd = okx_fee * price
+        else:
+            okx_wd_fee_usd = None # Treat 0 or missing price as Missing Data (not free)
+
+        # 3. Binance (Coin Units -> USD)
+        if binance_fee > 0 and price > 0:
+            binance_wd_fee_usd = binance_fee * price
+        else:
+            binance_wd_fee_usd = None
+            
+        # 4. Derived Gate Token Fee
+        if gate_fee_usd is not None and price > 0:
+            gate_wd_fee_token = gate_fee_usd / price
+        else:
+            gate_wd_fee_token = 0.0
+        
+        # 5. Sanity Logging
+        if price > 0:
+             # Only log if we have a valid price to make sense of the data
+             gate_log = f"${gate_fee_usd:.2f}" if gate_fee_usd is not None else "N/A"
+             logger.info(f"[WD DEBUG] {token} | Price: ${price:.4f} | Gate: {gate_log} | OKX: {okx_fee} (${(okx_wd_fee_usd or 0):.2f}) | Bin: {binance_fee} (${(binance_wd_fee_usd or 0):.2f})")
+        
+        fees = {
+            'gate_wd_fee': gate_wd_fee_token, 
+            'gate_wd_fee_usd': gate_fee_usd, # Can be None 
+            'okx_wd_fee': okx_fee,
+            'okx_wd_fee_usd': okx_wd_fee_usd, # Can be None
+            'binance_wd_fee': binance_fee,
+            'binance_wd_fee_usd': binance_wd_fee_usd, # Can be None
+            'token_price': price,
+            'valid': True # Default valid, filtered later if needed
+        }
+        
+        # Update cache
+        self.fee_cache[token] = {
+            'timestamp': now,
+            'fees': fees
+        }
+        
+        return fees
+
     def find_opportunities(self):
         logger.info("Mencari peluang...")
+        
+        # Prefetch prices to avoid N+1 LATER
+        # Ensure this is called before main loop
+        self._prefetch_prices()
         
         # Fetch Gate Earn
         gate_df = self.get_gate_data()
         if gate_df.empty:
             logger.warning("Data Gate kosong")
             return pd.DataFrame()
+
+        if self.gate_client:
+             # Clean up old manual batch fetch to move it down
+             pass 
+        else:
+             self._bulk_gate_fee_cache = {}
 
         # Fetch OKX Loan data
         okx_df = self.get_okx_data()
@@ -369,10 +524,78 @@ class OpportunityFinder:
         valid_opportunities['available'] = valid_opportunities.apply(check_final_availability, axis=1)
         valid_opportunities['status'] = valid_opportunities['available'].apply(lambda x: "✅ AVAILABLE" if x else "❌ NOT AVAILABLE")
         
+        # ================================
+        # ENRICH: Add Withdrawal Fees
+        # ================================
+        
+        # OPTIMIZATION: Batch Fetch Gate Fees for VALID opportunities only
+        if self.gate_client and not valid_opportunities.empty:
+            tokens = valid_opportunities['currency'].unique().tolist()
+            logger.info(f"Batch fetching Gate fees for {len(tokens)} valid tokens...")
+            # Update cache directly or use bulk cache
+            self._bulk_gate_fee_cache = self.gate_client.get_batch_withdrawal_fees(tokens)
+            
+        def add_wd_fees(row):
+            token = row['currency']
+            fees = self.get_token_wd_fees(token)
+            return pd.Series([
+                fees['gate_wd_fee'], fees['gate_wd_fee_usd'],
+                fees['okx_wd_fee'], fees['okx_wd_fee_usd'],
+                fees['binance_wd_fee'], fees['binance_wd_fee_usd']
+            ])
+            
+        valid_opportunities[['gate_wd_fee', 'gate_wd_fee_usd', 'okx_wd_fee', 'okx_wd_fee_usd', 'binance_wd_fee', 'binance_wd_fee_usd']] = valid_opportunities.apply(add_wd_fees, axis=1)
+        
         # Hitung net APR using the BEST loan rate
         valid_opportunities['net_apr'] = valid_opportunities['gate_apr'] - valid_opportunities['best_loan_rate']
+        
+        # ================================
+        # METRIC: Effective EV (Profitability after Fees)
+        # ================================
+        # Real EV = Net APR - Withdrawal Cost
+        # effective_ev_percent = net_apr - (wd_fee_usd / 1000 * 100)
+        DEFAULT_TRADE_SIZE = 1000.0
+        
+        def calc_ev(row):
+            source = row['best_loan_source']
+            net_apr = row['net_apr']
+            
+            # 1. Borrow/Bridge Fee (Source -> Gate)
+            source_wd_fee = 0.0
+            if source == 'OKX':
+                val = row.get('okx_wd_fee_usd')
+                if val is None or val <= 0:
+                     return -999.0 # Missing Fee Data (Non-Tradable)
+                source_wd_fee = float(val)
+            elif source == 'Binance':
+                val = row.get('binance_wd_fee_usd')
+                if val is None or val <= 0:
+                     return -999.0 # Missing Fee Data (Non-Tradable)
+                source_wd_fee = float(val)
+                
+            # 2. Exit Fee (Gate -> Wallet)
+            gate_val = row.get('gate_wd_fee_usd')
+            # Fix Zero-Value Masking: If missing/None, return penalty
+            if gate_val is None:
+                return -999.0
+            
+            gate_wd_fee = float(gate_val)
+            
+            # Total Fee Impact
+            total_fee = source_wd_fee + gate_wd_fee
+            
+            # Sanity Check: Fee > 50% of Position ($500)
+            if total_fee > (DEFAULT_TRADE_SIZE * 0.5):
+                 return -999.0 # Fee too high (Non-Tradable)
+                
+            # Impact in % terms
+            fee_impact_pct = (total_fee / DEFAULT_TRADE_SIZE) * 100
+            return net_apr - fee_impact_pct
+            
+        valid_opportunities['effective_ev'] = valid_opportunities.apply(calc_ev, axis=1)
         valid_opportunities['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         logger.info(f"Found {len(valid_opportunities)} opportunities (Gate + OKX/Binance)")
         
-        return valid_opportunities.sort_values('net_apr', ascending=False)
+        # Sort by Effective EV instead of raw Net APR
+        return valid_opportunities.sort_values('effective_ev', ascending=False)
